@@ -140,6 +140,11 @@ Para cada esquema actancial identificado (principal y secundario), mapear los se
     * Ejemplo: El Objeto de Valor del Esquema 2 es la Competencia (el saber o el poder) necesaria para 
     que el Sujeto del Esquema 1 pueda ejecutar su Performance (Acción Central).
 
+### VALIDACIÓN ESTRUCTURADA
+Tu respuesta DEBE cumplir exactamente este esquema JSON. No incluyas campos adicionales:
+
+{{schema_definition}}
+
 ### REQUISITO DE SALIDA
 {{force_json}}
 
@@ -162,11 +167,8 @@ Para cada esquema actancial identificado (principal y secundario), mapear los se
 ]
 ```
 
-Claves JSON requeridas: "scheme_id", "narrative_program_type", "function_in_plot", 
-"interconnection_details", "actants" y todas sus subclaves.
-
 {{appendix}}""",
-        variables=["force_json", "appendix"]
+        variables=["force_json", "appendix", "schema_definition"]
     )
     
     @classmethod

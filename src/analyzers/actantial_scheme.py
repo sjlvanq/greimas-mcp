@@ -3,6 +3,9 @@ from core.analyzer import NarrativeAnalyzer, AnalysisResult
 from core.prompt_template import PromptLibrary
 from errors.exceptions import MissingRequiredFieldError
 from logger.logger import get_logger
+import json
+import os
+from jsonschema import validate, ValidationError
 
 logger = get_logger("ActantialSchemeAnalyzer")
 
@@ -36,15 +39,38 @@ class ActantialSchemeAnalyzer(NarrativeAnalyzer):
         "opponent"
     }
     
+    def __init__(self, claude_client, temperature: float = 0.1):
+        """Inicializa el analizador y carga el esquema de validación."""
+        super().__init__(claude_client, temperature)
+        self.validation_schema = self._load_validation_schema()
+
+    def _load_validation_schema(self) -> Dict[str, Any]:
+        """Carga el JSON Schema para validación estructurada."""
+        schema_path = os.path.join(
+            os.path.dirname(__file__),
+            "../resources/actantial_schema.json"
+        )
+        try:
+            with open(schema_path, 'r', encoding='utf-8') as f:
+                schema = json.load(f)
+            logger.debug("Validation schema loaded", path=schema_path)
+            return schema
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.error("Failed to load validation schema", error=str(e))
+            raise
+
     def get_system_prompt(self) -> str:
         """Retorna el system prompt para extracción de esquemas actanciales."""
         force_json = PromptLibrary.get_prompt("force_json").content
         appendix = PromptLibrary.get_prompt("appendix").content
         
+        schema_str = json.dumps(self.validation_schema, indent=2)
+
         actantial_template = PromptLibrary.get_prompt("actantial_system")
         return actantial_template.render(
             force_json=force_json,
-            appendix=appendix
+            appendix=appendix,
+            schema_definition=schema_str
         )
     
     def get_user_prompt(self, narrative_text: str) -> str:
@@ -76,6 +102,30 @@ class ActantialSchemeAnalyzer(NarrativeAnalyzer):
         
         logger.debug("Input validation passed")
         return True, ""
+
+    def _validate_against_schema(self, scheme: Dict[str, Any], schema_index: int) -> tuple[bool, str]:
+        """
+        Valida un esquema individual contra el JSON Schema oficial.
+
+        Args:
+            scheme: Esquema a validar
+            schema_index: Índice del esquema (para logging)
+
+        Returns:
+            (is_valid, error_message)
+        """
+        try:
+            validate(instance=scheme, schema=self.validation_schema)
+            logger.debug(f"Scheme {schema_index} passed JSON Schema validation",
+                        scheme_id=scheme.get('scheme_id', 'Unknown'))
+            return True, ""
+        except ValidationError as e:
+            error_msg = (
+                f"Scheme {schema_index} ({scheme.get('scheme_id', 'Unknown')}) "
+                f"validation error: {e.message}"
+            )
+            logger.error(error_msg, schema_path=e.json_path)
+            return False, error_msg
     
     def parse_response(self, json_response: Dict[str, Any] | List[Any]) -> AnalysisResult:
         """
@@ -133,10 +183,16 @@ class ActantialSchemeAnalyzer(NarrativeAnalyzer):
                 errors.append(error_msg)
                 continue
             
+            # Validar contra schema
+            is_valid, schema_error = self._validate_against_schema(scheme, idx)
+            if not is_valid:
+                errors.append(schema_error)
+                continue
+
             logger.debug(f"Scheme {idx} ({scheme['scheme_id']}) validated successfully")
             validated_schemes.append(scheme)
         
-        # Si hay errores pero al menos un esquema válido, retornar con advertencia
+        # Manejo de resultados
         if errors and not validated_schemes:
             logger.error("No valid schemes found", error_count=len(errors))
             return AnalysisResult(
