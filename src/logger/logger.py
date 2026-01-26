@@ -61,10 +61,10 @@ class Logger:
             # Fallback a current dir si no se puede crear
             self.log_dir = Path('.')
 
-        # En entornos de pruebas (detecta pytest o variable TESTING) usar stdout
+        # En entornos de pruebas (detecta pytest o variable TESTING) usar stderr
         in_test = bool(os.getenv('PYTEST_CURRENT_TEST') or os.getenv('TESTING'))
         if in_test:
-            stream_handler = logging.StreamHandler(sys.stdout)
+            stream_handler = logging.StreamHandler(sys.stderr)
             stream_handler.setLevel(self.logger.level)
             fmt = logging.Formatter(
                 fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -75,8 +75,8 @@ class Logger:
         else:
             # Siempre agregar handler a archivo (rotación por tamaño)
             self._setup_file_handler()
-            # Y además un handler a stdout para ver logs durante ejecución
-            stream_handler = logging.StreamHandler(sys.stdout)
+            # Y además un handler a stderr para ver logs durante ejecución
+            stream_handler = logging.StreamHandler(sys.stderr)
             stream_handler.setLevel(self.logger.level)
             fmt = logging.Formatter(
                 fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
