@@ -1,8 +1,6 @@
 """
-Tests unitarios para validar la refactorización.
-
 Ejecutar con: pytest tests/test_analyzers.py -v
-python -m pytest server\tests\tests_analyzers.py -vv
+python -m pytest tests\tests_analyzers.py -vv
 """
 import pytest
 from unittest.mock import Mock, MagicMock, patch
