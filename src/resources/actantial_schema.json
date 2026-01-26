@@ -1,0 +1,91 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Greimasian Actantial Scheme",
+	"type": "object",
+	"properties": {
+		"scheme_id": {
+			"type": "string",
+			"description": "Unique identifier for the actantial scheme"
+		},
+		"narrative_program_type": {
+			"type": "string",
+			"enum": [
+				"Main Action",
+				"Secondary Action",
+				"Auxiliary Action"
+			],
+			"description": "Classification of narrative program"
+		},
+		 "function_in_plot": {
+			"type": "string",
+			"description": "The function or role of this scheme in the overall narrative structure (e.g., 'Central quest/transformation of state', 'Competence acquisition', 'Secondary action')"
+		},
+		"interconnection_details": {
+			"type": "string",
+			"description": "Optional: Details about how this actantial scheme relates to other schemes in the narrative"
+		},
+		"actants": {
+			"type": "object",
+			"properties": {
+				"subject": {
+					"type": [
+						"string",
+						"null"
+					],
+					"description": "The entity performing the main quest/action (Subject)"
+				},
+				"object_of_value": {
+					"type": [
+						"string",
+						"null"
+					],
+					"description": "The element desired or sought (Object)"
+				},
+				"destinator": {
+					"type": [
+						"string",
+						"null"
+					],
+					"description": "The instance that mandates or initiates the quest (Sender)"
+				},
+				"destination": {
+					"type": [
+						"string",
+						"null"
+					],
+					"description": "The beneficiary of the Object of Value (Receiver)"
+				},
+				"helper": {
+					"type": [
+						"string",
+						"null"
+					],
+					"description": "Forces/entities that facilitate the Subject's action (Helper)"
+				},
+				"opponent": {
+					"type": [
+						"string",
+						"null"
+					],
+					"description": "Forces/entities that obstruct the Subject's action (Opponent)"
+				}
+			},
+			"required": [
+				"subject",
+				"object_of_value",
+				"destinator",
+				"destination",
+				"helper",
+				"opponent"
+			],
+			"additionalProperties": false
+		}
+	},
+	"required": [
+		"scheme_id",
+		"narrative_program_type",
+		"function_in_plot",
+		"actants"
+	],
+	"additionalProperties": false
+}

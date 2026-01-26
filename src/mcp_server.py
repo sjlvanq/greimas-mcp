@@ -100,6 +100,33 @@ def _analysis_result_to_dict(result: AnalysisResult) -> Dict[str, Any]:
             "analysis_notes": result.error_message
         }
 
+def load_actantial_schema() -> Dict[str, Any]:
+    """Carga el esquema JSON de validación para estructuras actanciales."""
+    schema_path = os.path.join(
+        os.path.dirname(__file__),
+        "resources/actantial_schema.json"
+    )
+    
+    try:
+        with open(schema_path, 'r', encoding='utf-8') as f:
+            schema = json.load(f)
+        logger.debug("Actantial schema loaded successfully", path=schema_path)
+        return schema
+    except FileNotFoundError:
+        logger.error("Actantial schema file not found", path=schema_path)
+        raise
+    except json.JSONDecodeError as e:
+        logger.error("Invalid JSON in actantial schema", error=str(e))
+        raise
+
+@mcp.resource("schema://actantial-model")
+def get_actantial_schema() -> str:
+    """
+    Expone el esquema JSON de validación para estructuras actanciales
+    como recurso MCP.
+    """
+    schema = load_actantial_schema()
+    return json.dumps(schema, indent=2)
 
 @mcp.tool(
     name="CheckNarrativeFeasibility",
